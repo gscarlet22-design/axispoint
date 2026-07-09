@@ -47,6 +47,27 @@ export function resolveEvent(eventId?: string | null): EventEntry {
   return events.default;
 }
 
+/**
+ * Same as `resolveEvent`, but for the untagged/no-`?e=` case falls through to
+ * the admin-editable "current event" (`/admin`, stored in Redis) before the
+ * static empty default — lets Garrett update what he's showing at a booth
+ * without a redeploy, while named `?e=` tags keep working exactly as before.
+ */
+export function resolveEffectiveEvent(
+  eventId: string | undefined | null,
+  currentEventOverride?: { label: string; date: string },
+): EventEntry {
+  if (eventId && events[eventId]) return events[eventId];
+  if (currentEventOverride?.label) {
+    return {
+      label: currentEventOverride.label,
+      date: currentEventOverride.date,
+      note: `Met at ${currentEventOverride.label}`,
+    };
+  }
+  return events.default;
+}
+
 // Mirrored into the vCard AND shown on the page (§4.1). Keep this short — 2-3 max.
 export const reachLinks = [
   { kind: "phone", value: card.phone, display: card.phoneDisplay },

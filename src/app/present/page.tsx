@@ -3,12 +3,14 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeCanvas } from "qrcode.react";
-import { card, events, resolveEvent } from "@/config/card";
+import { card, events, resolveEffectiveEvent } from "@/config/card";
 import { buildCardVcard } from "@/lib/vcard";
+import type { CardSettings } from "@/lib/settings";
 import { CardFrame } from "@/components/CardFrame";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { BackToCardLink } from "@/components/BackToCardLink";
 import { CameraGlyphIcon } from "@/components/icons";
+import { FullScreenQr } from "@/components/FullScreenQr";
 
 type QrMode = "online" | "offline";
 
@@ -28,12 +30,22 @@ function PresentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("e") ?? undefined;
-  const event = resolveEvent(eventId);
+
+  const [settings, setSettings] = useState<CardSettings>({});
+  const event = resolveEffectiveEvent(eventId, settings.currentEvent);
 
   const [mode, setMode] = useState<QrMode>("online");
   const [isOnline, setIsOnline] = useState(true);
   const [origin, setOrigin] = useState("");
+  const [fullScreen, setFullScreen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then(setSettings)
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     setOrigin(window.location.origin);
@@ -79,9 +91,11 @@ function PresentContent() {
   }
 
   const namedEvents = Object.entries(events).filter(([id]) => id !== "default");
+  const currentEventLabel = settings.currentEvent?.label;
 
   return (
     <div className="flex flex-1 flex-col items-center px-4 py-10">
+      {fullScreen && <FullScreenQr value={qrValue} onExit={() => setFullScreen(false)} />}
       <SegmentedControl eventId={eventId} />
       <CardFrame>
         <div className="flex flex-col items-center px-7 pb-7 pt-[34px] text-center">
@@ -129,7 +143,15 @@ function PresentContent() {
             no app · one tap · always current
           </p>
 
-          <div className="mt-6 flex items-center gap-[3px] rounded-full border border-border-hairline bg-white/[.04] p-1">
+          <button
+            type="button"
+            onClick={() => setFullScreen(true)}
+            className="mt-5 rounded-row bg-accent px-5 py-2.5 font-display text-[14px] font-bold text-black"
+          >
+            Full screen
+          </button>
+
+          <div className="mt-5 flex items-center gap-[3px] rounded-full border border-border-hairline bg-white/[.04] p-1">
             {(["online", "offline"] as const).map((m) => (
               <button
                 key={m}
@@ -147,35 +169,31 @@ function PresentContent() {
             {isOnline ? "You appear online" : "You appear offline"} · forcing {mode}
           </p>
 
-          {namedEvents.length > 0 && (
-            <div className="mt-5 flex w-full flex-wrap justify-center gap-2">
+          <div className="mt-5 flex w-full flex-wrap justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => selectEvent(null)}
+              className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
+                !eventId ? "border-accent text-accent" : "border-border-strong text-text-muted"
+              }`}
+            >
+              {currentEventLabel || "No tag"}
+            </button>
+            {namedEvents.map(([id, entry]) => (
               <button
+                key={id}
                 type="button"
-                onClick={() => selectEvent(null)}
+                onClick={() => selectEvent(id)}
                 className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
-                  !eventId
+                  eventId === id
                     ? "border-accent text-accent"
                     : "border-border-strong text-text-muted"
                 }`}
               >
-                No tag
+                {entry.label}
               </button>
-              {namedEvents.map(([id, entry]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => selectEvent(id)}
-                  className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
-                    eventId === id
-                      ? "border-accent text-accent"
-                      : "border-border-strong text-text-muted"
-                  }`}
-                >
-                  {entry.label}
-                </button>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
 
           <button
             type="button"

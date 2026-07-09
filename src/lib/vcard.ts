@@ -41,8 +41,12 @@ function vcardLines(lines: string[]): string {
  * Used by `/api/vcard` (with photo) and the Present-mode offline QR (no
  * photo — a base64 photo won't fit a scannable QR, per §8B).
  */
-export function buildCardVcard(event: EventEntry, options?: { includePhoto?: boolean }): string {
+export function buildCardVcard(
+  event: EventEntry,
+  options?: { includePhoto?: boolean; photoBase64Override?: string },
+): string {
   const includePhoto = options?.includePhoto ?? true;
+  const photoBase64 = options?.photoBase64Override ?? card.photoBase64;
 
   const lines = [
     "BEGIN:VCARD",
@@ -57,8 +61,8 @@ export function buildCardVcard(event: EventEntry, options?: { includePhoto?: boo
     `ADR;TYPE=WORK:;;;${escapeVcardValue(card.city)};${escapeVcardValue(card.state)};;USA`,
   ];
 
-  if (includePhoto && card.photoBase64) {
-    lines.push(`PHOTO;ENCODING=b;TYPE=JPEG:${card.photoBase64}`);
+  if (includePhoto && photoBase64) {
+    lines.push(`PHOTO;ENCODING=b;TYPE=JPEG:${photoBase64}`);
   }
 
   lines.push(`NOTE:${escapeVcardValue(event.note)}`);

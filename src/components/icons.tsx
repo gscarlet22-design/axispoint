@@ -1,4 +1,4 @@
-import type { SVGProps } from "react";
+import { useId, type SVGProps } from "react";
 
 type IconProps = SVGProps<SVGSVGElement>;
 
@@ -80,12 +80,34 @@ export function CheckIcon(props: IconProps) {
   );
 }
 
+/**
+ * The Axis camera glyph used elsewhere in Axis software (present-mode QR
+ * badge, §"Assets" in the design handoff). Built as a mask so the shape
+ * (including the lens hole, corner square, and neck notch) is true
+ * transparency — it reads correctly filled with `currentColor` on any
+ * background, not just the dark badge tile it's currently placed on.
+ */
 export function CameraGlyphIcon(props: IconProps) {
+  const maskId = useId();
   return (
-    <svg viewBox="0 0 24 24" fill="none" {...props}>
-      <rect x="2" y="7" width="20" height="13" rx="3" stroke="currentColor" strokeWidth={1.7} />
-      <path d="M8 7l1.6-2.4A2 2 0 0 1 11.3 3.6h1.4a2 2 0 0 1 1.7 1L16 7" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="12" cy="13.5" r="4" stroke="currentColor" strokeWidth={1.7} />
+    <svg viewBox="0 0 200 200" {...props}>
+      <mask id={maskId} maskUnits="userSpaceOnUse">
+        <rect width="200" height="200" fill="black" />
+        <g fill="white">
+          <path d="M82,24 L82,14 Q82,4 92,4 L108,4 Q118,4 118,14 L118,24 Z" />
+          <rect x="38" y="20" width="124" height="130" rx="28" />
+          <circle cx="44" cy="80" r="21" />
+          <circle cx="156" cy="80" r="21" />
+          <rect x="82" y="150" width="36" height="40" />
+          <rect x="64" y="190" width="72" height="18" rx="4" />
+        </g>
+        <g fill="black">
+          <circle cx="100" cy="92" r="28" />
+          <rect x="132" y="42" width="16" height="16" rx="3" />
+          <rect x="76" y="168" width="48" height="8" />
+        </g>
+      </mask>
+      <rect width="200" height="200" fill="currentColor" mask={`url(#${maskId})`} />
     </svg>
   );
 }

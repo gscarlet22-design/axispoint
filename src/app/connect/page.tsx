@@ -1,15 +1,25 @@
 "use client";
 
-import { FormEvent, Suspense, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { resolveEvent } from "@/config/card";
+import { resolveEffectiveEvent } from "@/config/card";
+import type { CardSettings } from "@/lib/settings";
 import { CardFrame } from "@/components/CardFrame";
 import { BackToCardLink } from "@/components/BackToCardLink";
 
 function ConnectForm() {
   const searchParams = useSearchParams();
   const eventId = searchParams.get("e") ?? undefined;
-  const event = resolveEvent(eventId);
+
+  const [settings, setSettings] = useState<CardSettings>({});
+  const event = resolveEffectiveEvent(eventId, settings.currentEvent);
+
+  useEffect(() => {
+    fetch("/api/settings")
+      .then((res) => res.json())
+      .then(setSettings)
+      .catch(() => {});
+  }, []);
 
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,6 +101,7 @@ function ConnectForm() {
             Note
           </label>
           <textarea
+            key={event.note}
             id="note"
             name="note"
             rows={2}

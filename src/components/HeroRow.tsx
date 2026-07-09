@@ -1,11 +1,13 @@
 import { card } from "@/config/card";
 
-function Avatar() {
-  if (card.photoBase64) {
+function Avatar({ photoUrl }: { photoUrl?: string }) {
+  const src = photoUrl ?? (card.photoBase64 ? `data:image/jpeg;base64,${card.photoBase64}` : null);
+
+  if (src) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element -- data: URI, next/image can't optimize it
+      // eslint-disable-next-line @next/next/no-img-element -- data: URI / remote Blob URL, next/image can't optimize either
       <img
-        src={`data:image/jpeg;base64,${card.photoBase64}`}
+        src={src}
         alt={card.fullName}
         className="h-[74px] w-[74px] shrink-0 rounded-avatar object-cover"
       />
@@ -23,10 +25,10 @@ function Avatar() {
   );
 }
 
-export function HeroRow() {
+export function HeroRow({ photoUrl }: { photoUrl?: string }) {
   return (
     <div className="flex gap-4 p-6">
-      <Avatar />
+      <Avatar photoUrl={photoUrl} />
       <div className="min-w-0 flex-1">
         <h1 className="font-display text-[25px] font-bold leading-[1.08] tracking-[-0.01em] text-text-primary">
           {card.fullName}

@@ -1,7 +1,7 @@
 /// <reference lib="webworker" />
 
 import { defaultCache } from "@serwist/next/worker";
-import { CacheFirst, ExpirationPlugin, Serwist } from "serwist";
+import { ExpirationPlugin, NetworkFirst, Serwist } from "serwist";
 import type { PrecacheEntry, RuntimeCaching, SerwistGlobalConfig } from "serwist";
 
 declare global {
@@ -12,12 +12,17 @@ declare global {
 
 declare const self: ServiceWorkerGlobalScope;
 
-// `/api/vcard` needs CacheFirst (not the generic NetworkFirst `/api/*` rule in
-// `defaultCache`) so the Save button still works instantly offline (§8A).
+// `/api/vcard`'s content changes whenever the admin-edited event/photo
+// changes (or the app itself is updated) — CacheFirst would silently serve
+// a stale vCard indefinitely (bit us during development: a code fix was
+// invisible for an hour because of exactly this). NetworkFirst always
+// prefers a fresh fetch when online and only falls back to the cache
+// offline, still satisfying the "Save button works offline" goal (§8A).
 const vcardCache: RuntimeCaching = {
   matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname === "/api/vcard",
-  handler: new CacheFirst({
+  handler: new NetworkFirst({
     cacheName: "api-vcard",
+    networkTimeoutSeconds: 3,
     plugins: [new ExpirationPlugin({ maxEntries: 4, maxAgeSeconds: 30 * 24 * 60 * 60 })],
   }),
 };

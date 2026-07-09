@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { get } from "@vercel/blob";
 import { buildCardVcard } from "@/lib/vcard";
 import { getSettings, resolveEvent } from "@/lib/settings";
 
@@ -8,24 +7,13 @@ export async function GET(request: NextRequest) {
   const settings = await getSettings();
   const event = resolveEvent(settings, eventId);
 
-  // The admin-uploaded photo lives in private Blob storage — vCard PHOTO
-  // must be inline base64, not a URL (§6.3: iOS often won't fetch a URL photo
-  // on import), so read it with the SDK's authenticated access (a plain
-  // fetch would 403 against a private blob) and re-encode it here.
-  let photoBase64Override: string | undefined;
-  if (settings.photoUrl) {
-    try {
-      const result = await get(settings.photoUrl, { access: "private" });
-      if (result?.statusCode === 200) {
-        const buf = await new Response(result.stream).arrayBuffer();
-        photoBase64Override = Buffer.from(buf).toString("base64");
-      }
-    } catch (error) {
-      console.error("Failed to fetch admin-uploaded photo for vCard", error);
-    }
-  }
-
-  const vcf = buildCardVcard(event, { photoBase64Override });
+  // Embedding the photo was tried and reverted: real-device testing on
+  // Android showed Google Contacts mangling the base64 PHOTO field and
+  // dumping the wreckage (plus the ADR field) into the contact's Notes
+  // instead of saving cleanly — a broken save is far worse than a missing
+  // photo. The landing page's own photo (§6.3: "the reliable visual") is
+  // unaffected by this and always shows the real headshot regardless.
+  const vcf = buildCardVcard(event, { includePhoto: false });
 
   return new Response(vcf, {
     headers: {

@@ -13,7 +13,7 @@ export const card = {
   phone: "+17856405961", // E.164, for TEL
   phoneDisplay: "+1 (785) 640-5961",
   email: "garrett.scarlett@axis.com",
-  url: "https://garrettscarlett.vercel.app",
+  url: "https://axispoint.vercel.app",
   linkedIn: "https://www.linkedin.com/in/garrettscarlett/",
   siteDesigner: "https://sitedesigner.axis.com",
   youtube: "https://www.youtube.com/axiscommunications",

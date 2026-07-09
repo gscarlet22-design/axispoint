@@ -3,7 +3,8 @@
 // (§6.3): CRLF line endings, folding lines > 75 octets, and base64 (not URL)
 // photos.
 
-import { card, type EventEntry } from "@/config/card";
+import { card } from "@/config/card";
+import type { EventEntry } from "@/lib/settings";
 
 /** Escape vCard 3.0 special characters in a field value (RFC 2426 §5.8.4). */
 function escapeVcardValue(value: string): string {

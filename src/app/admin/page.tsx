@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BackToCardLink } from "@/components/BackToCardLink";
 import type { CardSettings } from "@/lib/settings";
+import { EventsSection } from "./EventsSection";
 
 const STORAGE_KEY = "axispoint_admin_passphrase";
 
@@ -86,9 +87,6 @@ export default function AdminPage() {
 
 function AdminEditor({ passphrase }: { passphrase: string }) {
   const [settings, setSettings] = useState<CardSettings>({});
-  const [label, setLabel] = useState("");
-  const [date, setDate] = useState("");
-  const [eventStatus, setEventStatus] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoStatus, setPhotoStatus] = useState<string | null>(null);
@@ -97,11 +95,7 @@ function AdminEditor({ passphrase }: { passphrase: string }) {
   useEffect(() => {
     fetch("/api/settings")
       .then((res) => res.json())
-      .then((data: CardSettings) => {
-        setSettings(data);
-        setLabel(data.currentEvent?.label ?? "");
-        setDate(data.currentEvent?.date ?? "");
-      });
+      .then(setSettings);
   }, []);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -129,23 +123,6 @@ function AdminEditor({ passphrase }: { passphrase: string }) {
     setPhotoStatus("Photo updated.");
   }
 
-  async function handleEventSave(e: React.FormEvent) {
-    e.preventDefault();
-    setEventStatus(null);
-    const res = await fetch("/api/admin/event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ passphrase, label, date }),
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      setEventStatus(data.error ?? "Save failed.");
-      return;
-    }
-    setSettings(data.settings);
-    setEventStatus("Event updated.");
-  }
-
   return (
     <div className="mx-auto w-full max-w-[480px] px-6 py-10">
       <BackToCardLink />
@@ -164,7 +141,7 @@ function AdminEditor({ passphrase }: { passphrase: string }) {
             {(photoPreview ?? settings.photoUrl) && (
               // eslint-disable-next-line @next/next/no-img-element -- preview of an uploaded/remote file
               <img
-                src={photoPreview ?? settings.photoUrl}
+                src={photoPreview ?? "/api/photo"}
                 alt="Headshot preview"
                 className="h-full w-full object-cover"
               />
@@ -185,44 +162,7 @@ function AdminEditor({ passphrase }: { passphrase: string }) {
         {photoStatus && <p className="mt-2 text-[12.5px] text-text-secondary">{photoStatus}</p>}
       </section>
 
-      <section className="mt-10">
-        <h2 className="font-display text-[16px] font-bold text-text-primary">Current event</h2>
-        <p className="mt-1 text-[13px] text-text-secondary">
-          Shows as &quot;Met at {label || "…"}&quot; on your card and in the saved contact&apos;s
-          note.
-        </p>
-        <form onSubmit={handleEventSave} className="mt-4 flex flex-col gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[9.5px] uppercase tracking-[.14em] text-text-label">
-              Label
-            </label>
-            <input
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="GPHA Annual Meeting"
-              className="rounded-row-sm border border-border-strong bg-transparent px-3 py-2 text-[14px] text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="font-mono text-[9.5px] uppercase tracking-[.14em] text-text-label">
-              Date
-            </label>
-            <input
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              placeholder="July 2026"
-              className="rounded-row-sm border border-border-strong bg-transparent px-3 py-2 text-[14px] text-text-primary focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            />
-          </div>
-          {eventStatus && <p className="text-[12.5px] text-text-secondary">{eventStatus}</p>}
-          <button
-            type="submit"
-            className="mt-1 rounded-row bg-accent px-4 py-3 font-display text-[15px] font-bold text-black"
-          >
-            Save event
-          </button>
-        </form>
-      </section>
+      <EventsSection passphrase={passphrase} settings={settings} onChange={setSettings} />
     </div>
   );
 }

@@ -23,50 +23,9 @@ export const card = {
   accent: "#ffd200",
 } as const;
 
-export type EventEntry = {
-  label: string;
-  note: string;
-  date: string;
-};
-
-export const events: Record<string, EventEntry> = {
-  // Per spec §4/§14: no `?e=` must resolve to an empty label/note/date, so an
-  // untagged visit never fabricates an event. The NFC tag / QR for the July
-  // 2026 GPHA launch should bake in `?e=gpha-annual-meeting` (spec §13) rather
-  // than relying on this default.
-  default: { label: "", note: "", date: "" },
-  "gpha-annual-meeting": {
-    label: "GPHA Annual Meeting",
-    note: "Met at GPHA Annual Meeting",
-    date: "July 2026",
-  },
-};
-
-export function resolveEvent(eventId?: string | null): EventEntry {
-  if (eventId && events[eventId]) return events[eventId];
-  return events.default;
-}
-
-/**
- * Same as `resolveEvent`, but for the untagged/no-`?e=` case falls through to
- * the admin-editable "current event" (`/admin`, stored in Redis) before the
- * static empty default — lets Garrett update what he's showing at a booth
- * without a redeploy, while named `?e=` tags keep working exactly as before.
- */
-export function resolveEffectiveEvent(
-  eventId: string | undefined | null,
-  currentEventOverride?: { label: string; date: string },
-): EventEntry {
-  if (eventId && events[eventId]) return events[eventId];
-  if (currentEventOverride?.label) {
-    return {
-      label: currentEventOverride.label,
-      date: currentEventOverride.date,
-      note: `Met at ${currentEventOverride.label}`,
-    };
-  }
-  return events.default;
-}
+// Events are fully admin-managed (`/admin`, stored in Redis) rather than a
+// static list here — see `src/lib/settings.ts` for the data model and
+// `resolveEvent()` for how a page view picks the effective event.
 
 // Mirrored into the vCard AND shown on the page (§4.1). Keep this short — 2-3 max.
 export const reachLinks = [

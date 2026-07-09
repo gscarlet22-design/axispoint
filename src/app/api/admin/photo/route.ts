@@ -31,10 +31,15 @@ export async function POST(request: NextRequest) {
     .toBuffer();
 
   try {
+    // This project's Blob store is configured private-only — public access
+    // is rejected outright by the store itself, not just a per-call choice.
+    // The photo is served back out through /api/photo (§ same directory),
+    // which reads it with the SDK's authenticated access.
     const blob = await put("card/photo.jpg", resized, {
-      access: "public",
+      access: "private",
       contentType: "image/jpeg",
       allowOverwrite: true,
+      addRandomSuffix: false,
     });
     const settings = await saveSettings({ photoUrl: blob.url });
     return NextResponse.json({ ok: true, settings });

@@ -1,4 +1,4 @@
-import type { EventEntry } from "@/config/card";
+import type { EventEntry } from "@/lib/settings";
 
 export function Footline({ event }: { event: EventEntry }) {
   if (!event.label) return null;

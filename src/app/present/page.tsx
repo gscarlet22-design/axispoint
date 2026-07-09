@@ -3,9 +3,9 @@
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { QRCodeCanvas } from "qrcode.react";
-import { card, events, resolveEffectiveEvent } from "@/config/card";
+import { card } from "@/config/card";
 import { buildCardVcard } from "@/lib/vcard";
-import type { CardSettings } from "@/lib/settings";
+import { resolveEvent, type CardSettings } from "@/lib/settings";
 import { CardFrame } from "@/components/CardFrame";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { BackToCardLink } from "@/components/BackToCardLink";
@@ -32,7 +32,7 @@ function PresentContent() {
   const eventId = searchParams.get("e") ?? undefined;
 
   const [settings, setSettings] = useState<CardSettings>({});
-  const event = resolveEffectiveEvent(eventId, settings.currentEvent);
+  const event = resolveEvent(settings, eventId);
 
   const [mode, setMode] = useState<QrMode>("online");
   const [isOnline, setIsOnline] = useState(true);
@@ -90,11 +90,11 @@ function PresentContent() {
     link.click();
   }
 
-  const namedEvents = Object.entries(events).filter(([id]) => id !== "default");
-  const currentEventLabel = settings.currentEvent?.label;
+  const eventsList = settings.events ?? [];
+  const currentEventLabel = eventsList.find((e) => e.id === settings.currentEventId)?.label;
 
   return (
-    <div className="flex flex-1 flex-col items-center px-4 py-10">
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
       {fullScreen && <FullScreenQr value={qrValue} onExit={() => setFullScreen(false)} />}
       <SegmentedControl eventId={eventId} />
       <CardFrame>
@@ -179,18 +179,18 @@ function PresentContent() {
             >
               {currentEventLabel || "No tag"}
             </button>
-            {namedEvents.map(([id, entry]) => (
+            {eventsList.map((e) => (
               <button
-                key={id}
+                key={e.id}
                 type="button"
-                onClick={() => selectEvent(id)}
+                onClick={() => selectEvent(e.id)}
                 className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
-                  eventId === id
+                  eventId === e.id
                     ? "border-accent text-accent"
                     : "border-border-strong text-text-muted"
                 }`}
               >
-                {entry.label}
+                {e.label}
               </button>
             ))}
           </div>

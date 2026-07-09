@@ -1,6 +1,5 @@
 import Link from "next/link";
-import { resolveEffectiveEvent } from "@/config/card";
-import { getSettings } from "@/lib/settings";
+import { getSettings, resolveEvent } from "@/lib/settings";
 import { CardFrame } from "./CardFrame";
 import { SegmentedControl } from "./SegmentedControl";
 import { StatusStrip } from "./StatusStrip";
@@ -12,14 +11,14 @@ import { Footline } from "./Footline";
 
 export async function Card({ eventId }: { eventId?: string }) {
   const settings = await getSettings();
-  const event = resolveEffectiveEvent(eventId, settings.currentEvent);
+  const event = resolveEvent(settings, eventId);
 
   return (
-    <div className="flex flex-1 flex-col items-center px-4 py-10">
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
       <SegmentedControl eventId={eventId} />
       <CardFrame>
         <StatusStrip />
-        <HeroRow photoUrl={settings.photoUrl} />
+        <HeroRow hasPhoto={!!settings.photoUrl} />
         <ReachRows />
         <SaveButton eventId={eventId} />
         <ResourcesDirectory />

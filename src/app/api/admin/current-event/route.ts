@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { checkAdminPassphrase } from "@/lib/adminAuth";
-import { saveSettings } from "@/lib/settings";
+import { setCurrentEvent } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -9,14 +9,10 @@ export async function POST(request: NextRequest) {
   const auth = checkAdminPassphrase(body.passphrase);
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
 
-  const label = String(body.label ?? "").trim();
-  const date = String(body.date ?? "").trim();
-  if (!label) {
-    return NextResponse.json({ error: "Event label is required" }, { status: 400 });
-  }
+  const id = body.id === null ? null : String(body.id ?? "").trim() || null;
 
   try {
-    const settings = await saveSettings({ currentEvent: { label, date } });
+    const settings = await setCurrentEvent(id);
     return NextResponse.json({ ok: true, settings });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

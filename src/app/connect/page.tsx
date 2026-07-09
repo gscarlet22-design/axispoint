@@ -2,8 +2,7 @@
 
 import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { resolveEffectiveEvent } from "@/config/card";
-import type { CardSettings } from "@/lib/settings";
+import { resolveEvent, type CardSettings } from "@/lib/settings";
 import { CardFrame } from "@/components/CardFrame";
 import { BackToCardLink } from "@/components/BackToCardLink";
 
@@ -12,7 +11,7 @@ function ConnectForm() {
   const eventId = searchParams.get("e") ?? undefined;
 
   const [settings, setSettings] = useState<CardSettings>({});
-  const event = resolveEffectiveEvent(eventId, settings.currentEvent);
+  const event = resolveEvent(settings, eventId);
 
   useEffect(() => {
     fetch("/api/settings")
@@ -173,7 +172,7 @@ function Field({
 
 export default function ConnectPage() {
   return (
-    <div className="flex flex-1 flex-col items-center px-4 py-10">
+    <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
       <CardFrame>
         <Suspense fallback={null}>
           <ConnectForm />

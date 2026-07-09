@@ -1,7 +1,10 @@
 import { card } from "@/config/card";
 
-function Avatar({ photoUrl }: { photoUrl?: string }) {
-  const src = photoUrl ?? (card.photoBase64 ? `data:image/jpeg;base64,${card.photoBase64}` : null);
+function Avatar({ hasPhoto }: { hasPhoto?: boolean }) {
+  // The admin-uploaded photo lives in private Blob storage, so the browser
+  // can't fetch its raw URL directly — /api/photo proxies it with the SDK's
+  // authenticated access.
+  const src = hasPhoto ? "/api/photo" : card.photoBase64 ? `data:image/jpeg;base64,${card.photoBase64}` : null;
 
   if (src) {
     return (
@@ -25,10 +28,10 @@ function Avatar({ photoUrl }: { photoUrl?: string }) {
   );
 }
 
-export function HeroRow({ photoUrl }: { photoUrl?: string }) {
+export function HeroRow({ hasPhoto }: { hasPhoto?: boolean }) {
   return (
     <div className="flex gap-4 p-6">
-      <Avatar photoUrl={photoUrl} />
+      <Avatar hasPhoto={hasPhoto} />
       <div className="min-w-0 flex-1">
         <h1 className="font-display text-[25px] font-bold leading-[1.08] tracking-[-0.01em] text-text-primary">
           {card.fullName}

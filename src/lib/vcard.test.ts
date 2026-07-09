@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildCardVcard, buildLeadVcard, foldLine } from "./vcard";
-import { events } from "@/config/card";
+import type { EventEntry } from "@/lib/settings";
+
+const blankEvent: EventEntry = { label: "", date: "", note: "" };
+const gphaEvent: EventEntry = {
+  label: "GPHA Annual Meeting",
+  date: "July 2026",
+  note: "Met at GPHA Annual Meeting",
+};
 
 function lineOctets(line: string): number {
   return Buffer.byteLength(line, "utf8");
@@ -28,7 +35,7 @@ describe("foldLine", () => {
 
 describe("buildCardVcard", () => {
   it("uses CRLF line endings throughout", () => {
-    const vcf = buildCardVcard(events.default);
+    const vcf = buildCardVcard(blankEvent);
     expect(vcf.includes("\r\n")).toBe(true);
     expect(vcf.includes("\n")).toBe(true); // \n only ever appears as part of \r\n
     const bareLf = vcf.replace(/\r\n/g, "");
@@ -36,7 +43,7 @@ describe("buildCardVcard", () => {
   });
 
   it("never emits a physical line longer than 75 octets", () => {
-    const vcf = buildCardVcard(events.default);
+    const vcf = buildCardVcard(blankEvent);
     const lines = vcf.split("\r\n").filter((l) => l.length > 0);
     for (const line of lines) {
       expect(lineOctets(line)).toBeLessThanOrEqual(75);
@@ -44,17 +51,17 @@ describe("buildCardVcard", () => {
   });
 
   it("injects the event NOTE when an event is tagged", () => {
-    const vcf = buildCardVcard(events["gpha-annual-meeting"]);
+    const vcf = buildCardVcard(gphaEvent);
     expect(vcf).toContain("NOTE:Met at GPHA Annual Meeting");
   });
 
   it("produces a clean empty NOTE for the default (untagged) event", () => {
-    const vcf = buildCardVcard(events.default);
+    const vcf = buildCardVcard(blankEvent);
     expect(vcf).toMatch(/NOTE:\r\n/);
   });
 
   it("contains exactly one TEL, EMAIL, and URL line (reachLinks + one URL only)", () => {
-    const vcf = buildCardVcard(events.default);
+    const vcf = buildCardVcard(blankEvent);
     const unfolded = vcf.replace(/\r\n /g, "");
     expect(unfolded.match(/^TEL;/gm)?.length).toBe(1);
     expect(unfolded.match(/^EMAIL;/gm)?.length).toBe(1);
@@ -62,12 +69,12 @@ describe("buildCardVcard", () => {
   });
 
   it("omits PHOTO when includePhoto is false", () => {
-    const vcf = buildCardVcard(events.default, { includePhoto: false });
+    const vcf = buildCardVcard(blankEvent, { includePhoto: false });
     expect(vcf).not.toContain("PHOTO;");
   });
 
   it("starts and ends with the vCard envelope", () => {
-    const vcf = buildCardVcard(events.default);
+    const vcf = buildCardVcard(blankEvent);
     expect(vcf.startsWith("BEGIN:VCARD\r\n")).toBe(true);
     expect(vcf.trimEnd().endsWith("END:VCARD")).toBe(true);
   });

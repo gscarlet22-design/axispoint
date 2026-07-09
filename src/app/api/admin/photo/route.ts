@@ -19,26 +19,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "No photo file provided" }, { status: 400 });
   }
 
-  if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    return NextResponse.json(
-      { error: "BLOB_READ_WRITE_TOKEN isn't configured — connect a Blob store to this project." },
-      { status: 503 },
-    );
-  }
-
+  // Vercel Blob supports two credential paths: the classic
+  // `BLOB_READ_WRITE_TOKEN`, or `BLOB_STORE_ID` + an automatically-injected
+  // OIDC token (the current default when a store is connected). Rather than
+  // assume which one applies, let `put()` itself fail with its own precise
+  // error if neither is present.
   const arrayBuffer = await file.arrayBuffer();
   const resized = await sharp(Buffer.from(arrayBuffer))
     .resize(400, 400, { fit: "cover" })
     .jpeg({ quality: 80 })
     .toBuffer();
 
-  const blob = await put("card/photo.jpg", resized, {
-    access: "public",
-    contentType: "image/jpeg",
-    allowOverwrite: true,
-  });
-
   try {
+    const blob = await put("card/photo.jpg", resized, {
+      access: "public",
+      contentType: "image/jpeg",
+      allowOverwrite: true,
+    });
     const settings = await saveSettings({ photoUrl: blob.url });
     return NextResponse.json({ ok: true, settings });
   } catch (error) {

@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", monospace;
+
+  /* Surfaces */
+  --color-surface-panel: #161619;
+  --color-surface-outer: #08080a;
+
+  /* Borders / hairlines */
+  --color-border-hairline: #232329;
+  --color-border-strong: #2c2c33;
+  --color-border-row: #212127;
+
+  /* Text */
+  --color-text-primary: #ecebe6;
+  --color-text-secondary: #9d9c98;
+  --color-text-muted: #8b8a86;
+  --color-text-label: #6f6e72;
+
+  /* Accent */
+  --color-accent: #ffd200;
+  --color-accent-brass: #e8b45a;
+  --color-success: #63e6a8;
+
+  /* Resource / action tile */
+  --color-tile-fill: #212127;
+  --color-tile-border: #2c2c33;
+
+  /* Radii */
+  --radius-outer: 46px;
+  --radius-panel: 38px;
+  --radius-row: 14px;
+  --radius-row-sm: 12px;
+  --radius-tile: 9px;
+  --radius-avatar: 18px;
+
+  /* Shadows */
+  --shadow-outer-frame: 0 40px 80px -24px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Status dot — soft pulsing ring (README "Card view" §Status strip) */
+@keyframes status-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(99, 230, 168, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(99, 230, 168, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(99, 230, 168, 0);
+  }
+}
+.animate-status-pulse {
+  animation: status-pulse 2.4s ease-out infinite;
+}
+
+/* Save CTA — cross-fade between idle/saving/saved content */
+@keyframes fade-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-save-fade {
+  animation: fade-slide-in 0.28s ease;
+}
+
+/* Save CTA — "Added to contacts" pop-in */
+@keyframes pop-in {
+  0% {
+    transform: scale(0.85);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.animate-save-pop {
+  animation: pop-in 0.35s ease;
+}
+
+/* Save CTA — accent ring pulsing outward on Saved */
+@keyframes save-ring-pulse {
+  from {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.animate-save-ring {
+  animation: save-ring-pulse 0.7s ease-out;
+}
+
+/* Save CTA — checkmark stroke draw-on (paired with pathLength=1 on the <path>) */
+@keyframes stroke-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.save-check-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: stroke-draw 0.4s ease forwards;
+}
+
+/* Present mode — scan line sweep */
+@keyframes scan-line {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(188px);
+    opacity: 0;
+  }
+}
+.animate-scan-line {
+  animation: scan-line 2.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -6,6 +6,37 @@ import { CheckIcon, PlusIcon } from "./icons";
 
 type SaveState = "idle" | "saving" | "saved";
 
+function triggerDownload(href: string) {
+  const a = document.createElement("a");
+  a.href = href;
+  a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+/**
+ * Sharing the .vcf as a file (rather than just downloading it) lets the
+ * OS's native share sheet offer "Add to Contacts" as a direct target on
+ * many Android and iOS versions — skipping the Downloads-folder detour
+ * Android Chrome otherwise forces on a plain download.
+ */
+async function tryNativeShare(href: string): Promise<boolean> {
+  if (!navigator.canShare) return false;
+  try {
+    const res = await fetch(href);
+    const blob = await res.blob();
+    const file = new File([blob], "garrett.vcf", { type: "text/vcard" });
+    if (!navigator.canShare({ files: [file] })) return false;
+    await navigator.share({ files: [file] });
+    return true;
+  } catch (err) {
+    // The user dismissing the share sheet is a completed interaction, not
+    // a failure — don't also fall back to a download in that case.
+    return err instanceof DOMException && err.name === "AbortError";
+  }
+}
+
 export function SaveButton({ eventId }: { eventId?: string }) {
   const [state, setState] = useState<SaveState>("idle");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
@@ -13,20 +44,18 @@ export function SaveButton({ eventId }: { eventId?: string }) {
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
   function handleClick() {
-    // Fire the real .vcf download concurrently with the animation (§5).
-    const href = eventId ? `/api/vcard?e=${encodeURIComponent(eventId)}` : "/api/vcard";
-    const a = document.createElement("a");
-    a.href = href;
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-
     setState("saving");
     timers.current.push(
       setTimeout(() => setState("saved"), 900),
       setTimeout(() => setState("idle"), 3500),
     );
+
+    // Concurrently with the animation (§5): try the native share sheet
+    // first, falling back to a plain download if sharing isn't available.
+    const href = eventId ? `/api/vcard?e=${encodeURIComponent(eventId)}` : "/api/vcard";
+    tryNativeShare(href).then((shared) => {
+      if (!shared) triggerDownload(href);
+    });
   }
 
   return (

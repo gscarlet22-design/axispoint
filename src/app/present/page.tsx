@@ -91,7 +91,10 @@ function PresentContent() {
   }
 
   const eventsList = settings.events ?? [];
-  const currentEventLabel = eventsList.find((e) => e.id === settings.currentEventId)?.label;
+  // currentEventId always points at one of these events once set, so a
+  // separate "No tag" pill would just duplicate it — only show "No tag" as
+  // its own option when there's genuinely no current event configured.
+  const hasCurrentInList = eventsList.some((e) => e.id === settings.currentEventId);
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-4 py-10">
@@ -170,29 +173,34 @@ function PresentContent() {
           </p>
 
           <div className="mt-5 flex w-full flex-wrap justify-center gap-2">
-            <button
-              type="button"
-              onClick={() => selectEvent(null)}
-              className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
-                !eventId ? "border-accent text-accent" : "border-border-strong text-text-muted"
-              }`}
-            >
-              {currentEventLabel || "No tag"}
-            </button>
-            {eventsList.map((e) => (
+            {!hasCurrentInList && (
               <button
-                key={e.id}
                 type="button"
-                onClick={() => selectEvent(e.id)}
+                onClick={() => selectEvent(null)}
                 className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
-                  eventId === e.id
-                    ? "border-accent text-accent"
-                    : "border-border-strong text-text-muted"
+                  !eventId ? "border-accent text-accent" : "border-border-strong text-text-muted"
                 }`}
               >
-                {e.label}
+                No tag
               </button>
-            ))}
+            )}
+            {eventsList.map((e) => {
+              const isDefault = e.id === settings.currentEventId;
+              const isActive = eventId === e.id || (!eventId && isDefault);
+              return (
+                <button
+                  key={e.id}
+                  type="button"
+                  onClick={() => selectEvent(e.id)}
+                  className={`rounded-full border px-3 py-1 font-mono text-[10.5px] uppercase tracking-[.08em] ${
+                    isActive ? "border-accent text-accent" : "border-border-strong text-text-muted"
+                  }`}
+                >
+                  {e.label}
+                  {isDefault && <span className="ml-1">•</span>}
+                </button>
+              );
+            })}
           </div>
 
           <button

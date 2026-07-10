@@ -16,12 +16,29 @@ function triggerDownload(href: string) {
 }
 
 /**
+ * iOS Safari (and iPadOS, which reports as "Macintosh" but is touch-capable)
+ * also supports navigator.share/canShare with files, but sharing a
+ * JS-constructed vCard File there opens the generic OS share sheet
+ * (Messages/Mail/AirDrop/Save to Files/…) with no obvious "Add Contact"
+ * option — confusing for a first-time scanner. A direct same-tab
+ * navigation to the vcard URL is what makes Safari show its own native
+ * "Add Contact" preview card instead, so iOS skips the share-sheet path
+ * entirely and goes straight to triggerDownload.
+ */
+function isIOS(): boolean {
+  const ua = navigator.userAgent;
+  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+}
+
+/**
  * Sharing the .vcf as a file (rather than just downloading it) lets the
  * OS's native share sheet offer "Add to Contacts" as a direct target on
- * many Android and iOS versions — skipping the Downloads-folder detour
- * Android Chrome otherwise forces on a plain download.
+ * many Android versions — skipping the Downloads-folder detour Android
+ * Chrome otherwise forces on a plain download.
  */
 async function tryNativeShare(href: string): Promise<boolean> {
+  if (isIOS()) return false;
   if (!navigator.canShare) return false;
   try {
     const res = await fetch(href);
@@ -39,7 +56,12 @@ async function tryNativeShare(href: string): Promise<boolean> {
 
 export function SaveButton({ eventId }: { eventId?: string }) {
   const [state, setState] = useState<SaveState>("idle");
+  const [isIOSDevice, setIsIOSDevice] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    setIsIOSDevice(isIOS());
+  }, []);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -92,6 +114,11 @@ export function SaveButton({ eventId }: { eventId?: string }) {
           )}
         </span>
       </button>
+      {isIOSDevice && (
+        <p className="mt-2.5 text-center font-mono text-[11px] text-text-muted">
+          Opens a preview — tap the share icon, then &quot;Add to Contact&quot;
+        </p>
+      )}
       <p className="mt-3.5 text-center">
         <Link
           href={eventId ? `/connect?e=${encodeURIComponent(eventId)}` : "/connect"}

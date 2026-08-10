@@ -14,6 +14,15 @@ import { FullScreenQr } from "@/components/FullScreenQr";
 
 type QrMode = "online" | "offline";
 
+// Present mode's event pill is a per-device override of which event tag
+// this phone is currently showing/embedding — distinct from the admin's
+// server-side "current event" default, which applies to *other* people's
+// untagged visits. The installed PWA's start_url never carries an `e`
+// param, so without this the pill silently fell back to that unrelated
+// admin default on every app kill/restart instead of remembering what was
+// last picked here.
+const PRESENT_EVENT_STORAGE_KEY = "axispoint:present-event";
+
 function CornerBrackets() {
   const common = "absolute h-6 w-6 border-accent";
   return (
@@ -47,6 +56,18 @@ function PresentContent() {
       .catch(() => {});
   }, []);
 
+  // Restore the last pill picked on this device when launching with no
+  // explicit `e` param (a fresh PWA open, not a specific shared/scanned
+  // link — those should keep winning over whatever was picked before).
+  useEffect(() => {
+    if (eventId) return;
+    const stored = window.localStorage.getItem(PRESENT_EVENT_STORAGE_KEY);
+    if (!stored) return;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("e", stored);
+    router.replace(`/present?${params.toString()}`);
+  }, [eventId, searchParams, router]);
+
   useEffect(() => {
     setOrigin(window.location.origin);
     setIsOnline(navigator.onLine);
@@ -72,6 +93,11 @@ function PresentContent() {
   }, [mode, event, eventId, origin]);
 
   function selectEvent(id: string | null) {
+    if (id) {
+      window.localStorage.setItem(PRESENT_EVENT_STORAGE_KEY, id);
+    } else {
+      window.localStorage.removeItem(PRESENT_EVENT_STORAGE_KEY);
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (id) {
       params.set("e", id);

@@ -7,9 +7,20 @@ export const card = {
   fullName: "Garrett Scarlett",
   title: "Regional Sales Manager - Western Plains",
   org: "Axis Communications",
-  city: "Kansas City",
-  state: "KS",
-  location: "Kansas City, KS",
+  location: "Kansas City, KS", // territory tagline — Garrett's own city, not the mailing address below
+  // Delivery/mailing address (a box in KCMO — different from the KS tagline
+  // above, which is Garrett's own city within the Western Plains territory).
+  // Feeds the vCard's ADR field and the on-page "Address" row.
+  mailingAddress: {
+    street: "4741 Central St",
+    suite: "Suite 310",
+    city: "Kansas City",
+    state: "MO",
+    postalCode: "64112",
+    country: "USA",
+    display: "4741 Central St, Suite 310, Kansas City, MO 64112",
+    mapsUrl: "https://maps.google.com/?q=4741+Central+St+Suite+310+Kansas+City+MO+64112",
+  },
   phone: "+17856405961", // E.164, for TEL
   phoneDisplay: "+1 (785) 640-5961",
   email: "garrett.scarlett@axis.com",
@@ -31,6 +42,7 @@ export const card = {
 export const reachLinks = [
   { kind: "phone", value: card.phone, display: card.phoneDisplay },
   { kind: "email", value: card.email },
+  { kind: "address", value: card.mailingAddress.mapsUrl, display: card.mailingAddress.display },
 ] as const;
 
 // Page-only (§4.1/§5.1). Never touches the saved vCard.

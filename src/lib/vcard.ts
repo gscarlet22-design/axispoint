@@ -59,7 +59,14 @@ export function buildCardVcard(
     `TEL;TYPE=CELL:${card.phone}`,
     `EMAIL;TYPE=WORK:${card.email}`,
     `URL:${card.url}`,
-    `ADR;TYPE=WORK:;;;${escapeVcardValue(card.city)};${escapeVcardValue(card.state)};;USA`,
+    // ADR components: POBox;ExtendedAddress;Street;Locality;Region;PostalCode;Country
+    `ADR;TYPE=WORK:;${escapeVcardValue(card.mailingAddress.suite)};${escapeVcardValue(
+      card.mailingAddress.street,
+    )};${escapeVcardValue(card.mailingAddress.city)};${escapeVcardValue(
+      card.mailingAddress.state,
+    )};${escapeVcardValue(card.mailingAddress.postalCode)};${escapeVcardValue(
+      card.mailingAddress.country,
+    )}`,
   ];
 
   if (includePhoto && photoBase64) {

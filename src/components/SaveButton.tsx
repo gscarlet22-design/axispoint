@@ -122,7 +122,7 @@ export function SaveButton({ eventId }: { eventId?: string }) {
       <p className="mt-3.5 text-center">
         <Link
           href={eventId ? `/connect?e=${encodeURIComponent(eventId)}` : "/connect"}
-          className="font-mono text-[11.5px] text-text-label underline decoration-border-strong underline-offset-2"
+          className="font-mono text-[12.5px] font-semibold text-accent-brass underline decoration-accent-brass/40 underline-offset-2"
         >
           trade info? send me yours →
         </Link>

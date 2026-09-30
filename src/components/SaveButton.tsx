@@ -119,14 +119,14 @@ export function SaveButton({ eventId }: { eventId?: string }) {
           Opens a preview — tap the share icon, then &quot;Add to Contact&quot;
         </p>
       )}
-      <p className="mt-3.5 text-center">
+      <div className="mt-3.5 flex justify-center">
         <Link
           href={eventId ? `/connect?e=${encodeURIComponent(eventId)}` : "/connect"}
-          className="font-mono text-[12.5px] font-semibold text-accent-brass underline decoration-accent-brass/40 underline-offset-2"
+          className="inline-flex items-center gap-1.5 rounded-full border border-accent-brass/50 bg-accent-brass/[.06] px-4 py-2 font-mono text-[12px] font-semibold text-accent-brass transition-colors active:bg-accent-brass/15"
         >
           trade info? send me yours →
         </Link>
-      </p>
+      </div>
     </div>
   );
 }
